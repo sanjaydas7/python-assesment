@@ -13,10 +13,7 @@ class TestApi(unittest.TestCase):
             sent = {}
             result = client.get('/', data=sent)
             a = result.data.decode()
-            print(result.data)
-            print(sent)
-            # self.assertEqual(result.data,json.dumps(sent))
-            self.assertEqual(a, "hello")
+            self.assertEqual(a, "hello flask is running")
 
     def test_player_birth_year(self):
         with app.test_client() as client:

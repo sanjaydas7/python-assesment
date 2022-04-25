@@ -5,20 +5,24 @@ from calculateage import calculate_age
 
 app = Flask(__name__)
 
-# 1.	Returns % of players above a particular year. Input could be any year for example, 1989.
-# All players born on or after 1989 should be considered and the percentage should be calculated.
 
-month = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", "Jul": "07", "Aug": "08",
+MONTH = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", "Jul": "07", "Aug": "08",
          "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
 
 
 @app.route('/')
 def hello_world():
-    return "hello"
+    return "hello flask is running"
 
 
 @app.route('/players_birth_year', methods=['GET'])
 def player_birth_year():
+    """
+    This api is used to find the percentage of the players above the birth year mentioned.
+
+    request :-> {"Year":"1995"}
+
+    """
     input_json = request.get_json(force=True)
     birth_year = input_json["Year"]
     try:
@@ -39,18 +43,20 @@ def player_birth_year():
                 total_player.append(row['ï»¿Player_Name'])
             average_player = round((len(players) / len(total_player)) * 100, 2)
             no_dob_player = round((len(no_dob) / len(total_player)) * 100, 2)
-            # print(average_player)
             players_result = {f"Percentage of player born above {birth_year}": f"{average_player}%",
                               "Percentage of player with no date of birth": f"{no_dob_player}%"}
-            # print(players_result)
             return jsonify(players_result)
     except:
-        # raise "Something went wrong"
         return "something went wrong"
 
 
 @app.route('/average_age', methods=['GET'])
 def average_ages():
+    """
+    This api is used to find the average age of players in a team.
+
+    Request:-> {"Country":"India"}
+    """
     try:
         input_json = request.get_json(force=True)
         country_req = input_json["Country"]
@@ -63,7 +69,7 @@ def average_ages():
                     if row["DOB"] != "":
                         date_of_birth = row["DOB"]
                         date_of_birth = date_of_birth.split("-")
-                        org_date_of_birth = f"{date_of_birth[0]} {month[date_of_birth[1]]} 19{date_of_birth[2]}"
+                        org_date_of_birth = f"{date_of_birth[0]} {MONTH[date_of_birth[1]]} 19{date_of_birth[2]}"
                         org_date_of_birth = datetime.strptime(org_date_of_birth, "%d %m %Y")
                         age = calculate_age(org_date_of_birth)
                         total_of_age["age_dob"] = total_of_age["age_dob"] + age
@@ -79,7 +85,11 @@ def average_ages():
 
 @app.route('/batsmen_position_left', methods=['GET'])
 def batsmen_position():
-    # input_json = request.get_json(force=True)
+    """
+    This api is used to find the team which have most number of left hands batsmen.
+
+    Request:-> Not required
+    """
     batsmen_country = {}
     with open('Players.csv', 'r', ) as file:
         players_obj = csv.DictReader(file)
@@ -101,29 +111,48 @@ def batsmen_position():
 
 @app.route('/no_country', methods=['GET'])
 def no_country():
-    no_country_player = []
-    with open('Players.csv', 'r', ) as file:
-        player_obj = csv.DictReader(file)
-        for row in player_obj:
-            if row["Country"] == "":
-                no_country_player.append(row['ï»¿Player_Name'])
-        no_country = {"Player with no country defined": f"{no_country_player}"}
-        return jsonify(no_country)
+
+    """
+    This is api is used to find the players whose country is not mentioned
+
+    Request:-> Not required
+    """
+    try:
+        no_country_player = []
+        with open('Players.csv', 'r', ) as file:
+            player_obj = csv.DictReader(file)
+            for row in player_obj:
+                if row["Country"] == "":
+                    no_country_player.append(row['ï»¿Player_Name'])
+            no_country = {"Player with no country defined": f"{no_country_player}"}
+            return jsonify(no_country)
+    except:
+        return "something went wrong"
 
 
 @app.route('/player_country', methods=['GET'])
 def country_player():
-    input_json = request.get_json(force=True)
-    country = input_json["Country"]
-    country_player = []
-    with open('Players.csv', 'r', ) as file:
-        player_obj = csv.DictReader(file)
-        for row in player_obj:
-            if row["Country"] == country:
-                country_player.append(row["ï»¿Player_Name"])
 
-    if len(country_player) != 0:
-        result = {f"Players of {country}": f"{country_player}"}
-        return jsonify(result)
-    else:
-        return f"No player exists in {country}"
+    """
+    This is api is used to get the list of players on the bases of the team name.
+
+    Request:-> {"Country":"India"}
+
+    """
+    try:
+        input_json = request.get_json(force=True)
+        country = input_json["Country"]
+        country_player = []
+        with open('Players.csv', 'r', ) as file:
+            player_obj = csv.DictReader(file)
+            for row in player_obj:
+                if row["Country"] == country:
+                    country_player.append(row["ï»¿Player_Name"])
+
+        if len(country_player) != 0:
+            result = {f"Players of {country}": f"{country_player}"}
+            return jsonify(result)
+        else:
+            return f"No player exists in {country}"
+    except:
+        return "something went wrong"
